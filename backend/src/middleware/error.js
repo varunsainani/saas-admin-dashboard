@@ -1,0 +1,16 @@
+const { ZodError } = require("zod");
+
+// eslint-disable-next-line no-unused-vars
+module.exports = function errorHandler(err, req, res, next) {
+  if (err instanceof ZodError) {
+    return res.status(400).json({
+      error: "Invalid input",
+      details: err.issues.map((i) => ({ path: i.path.join("."), message: i.message })),
+    });
+  }
+  if (err && err.status) {
+    return res.status(err.status).json({ error: err.publicMessage || "Request failed" });
+  }
+  console.error(err);
+  return res.status(500).json({ error: "Internal server error" });
+};
