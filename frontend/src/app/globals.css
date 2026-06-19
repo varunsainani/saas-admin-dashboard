@@ -1,0 +1,111 @@
+@import "tailwindcss";
+
+/* Manual dark mode via a .dark class on <html> (driven by next-themes). */
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --background: #ffffff;
+  --foreground: #0a0a0b;
+  --card: #ffffff;
+  --card-foreground: #0a0a0b;
+  --popover: #ffffff;
+  --popover-foreground: #0a0a0b;
+  --subtle: #fafafa;
+  --muted: #f4f4f5;
+  --muted-foreground: #6b7280;
+  --primary: #4f46e5;
+  --primary-foreground: #ffffff;
+  --accent: #eef2ff;
+  --accent-foreground: #4338ca;
+  --border: #e7e7ea;
+  --input: #e4e4e7;
+  --ring: #4f46e5;
+  --success: #16a34a;
+  --success-foreground: #ffffff;
+  --warning: #d97706;
+  --danger: #dc2626;
+  --radius: 0.625rem;
+}
+
+.dark {
+  --background: #09090b;
+  --foreground: #fafafa;
+  --card: #111114;
+  --card-foreground: #fafafa;
+  --popover: #111114;
+  --popover-foreground: #fafafa;
+  --subtle: #0c0c0e;
+  --muted: #1b1b1f;
+  --muted-foreground: #9ca3af;
+  --primary: #6366f1;
+  --primary-foreground: #ffffff;
+  --accent: #211f3a;
+  --accent-foreground: #c7d2fe;
+  --border: #232328;
+  --input: #2a2a30;
+  --ring: #6366f1;
+  --success: #22c55e;
+  --success-foreground: #052e16;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-subtle: var(--subtle);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, sans-serif;
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  ::selection {
+    background-color: color-mix(in oklab, var(--primary) 22%, transparent);
+  }
+}
+
+/* Refined, unobtrusive scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-thumb {
+  background-color: var(--border);
+  border-radius: 9999px;
+}

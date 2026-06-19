@@ -1,0 +1,109 @@
+// SaaS admin backend data model. Multi-tenant: every record is scoped to an
+// Organization. Roles drive access control; audit logs capture every change.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  MANAGER
+  USER
+}
+
+enum UserStatus {
+  ACTIVE
+  INVITED
+  SUSPENDED
+}
+
+enum SubscriptionStatus {
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  CANCELED
+}
+
+model Organization {
+  id           String        @id @default(cuid())
+  name         String
+  slug         String        @unique
+  createdAt    DateTime      @default(now())
+  users        User[]
+  subscription Subscription?
+  auditLogs    AuditLog[]
+}
+
+model User {
+  id             String         @id @default(cuid())
+  organizationId String
+  organization   Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  name           String
+  email          String         @unique
+  passwordHash   String
+  role           Role           @default(USER)
+  status         UserStatus     @default(ACTIVE)
+  emailVerified  Boolean        @default(false)
+  title          String?
+  avatarColor    String?
+  lastActiveAt   DateTime?
+  createdAt      DateTime       @default(now())
+  refreshTokens  RefreshToken[]
+  auditLogs      AuditLog[]     @relation("ActorLogs")
+
+  @@index([organizationId])
+}
+
+model Plan {
+  id            String         @id @default(cuid())
+  name          String         @unique
+  priceMonthly  Int // cents
+  seats         Int
+  features      Json // string[]
+  popular       Boolean        @default(false)
+  subscriptions Subscription[]
+}
+
+model Subscription {
+  id               String             @id @default(cuid())
+  organizationId   String             @unique
+  organization     Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  planId           String
+  plan             Plan               @relation(fields: [planId], references: [id])
+  status           SubscriptionStatus @default(ACTIVE)
+  seatsUsed        Int                @default(0)
+  currentPeriodEnd DateTime
+  createdAt        DateTime           @default(now())
+}
+
+model AuditLog {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  actorId        String?
+  actor          User?        @relation("ActorLogs", fields: [actorId], references: [id], onDelete: SetNull)
+  action         String
+  target         String?
+  metadata       Json?
+  ip             String?
+  createdAt      DateTime     @default(now())
+
+  @@index([organizationId, createdAt])
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String   @unique
+  expiresAt DateTime
+  revoked   Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
