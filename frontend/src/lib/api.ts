@@ -47,6 +47,15 @@ export function isAuthed() {
   );
 }
 
+// Read the locale chosen via the language toggle. When unset (first visit), we
+// omit the header so the backend falls back to the browser's Accept-Language,
+// matching the UI's own auto-detection.
+function getLocaleCookie(): string | null {
+  if (typeof document === "undefined") return null;
+  const match = document.cookie.match(/(?:^|;\s*)NEXT_LOCALE=([^;]+)/);
+  return match ? decodeURIComponent(match[1]) : null;
+}
+
 async function api<T = unknown>(
   path: string,
   opts: { method?: string; body?: unknown } = {},
@@ -54,6 +63,8 @@ async function api<T = unknown>(
   const headers: Record<string, string> = { "Content-Type": "application/json" };
   const token = getToken();
   if (token) headers.Authorization = `Bearer ${token}`;
+  const locale = getLocaleCookie();
+  if (locale) headers["X-Locale"] = locale;
 
   const res = await fetch(`${BASE}${path}`, {
     method: opts.method ?? "GET",

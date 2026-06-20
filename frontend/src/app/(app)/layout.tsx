@@ -2,12 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { Sidebar } from "@/components/sidebar";
 import { Topbar } from "@/components/topbar";
 import { VerifyBanner } from "@/components/verify-banner";
 import { isAuthed } from "@/lib/api";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
+  const t = useTranslations("common");
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [ready, setReady] = useState(false);
@@ -20,7 +22,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   if (!ready) {
     return (
       <div className="flex h-screen items-center justify-center text-sm text-muted-foreground">
-        Loading…
+        {t("loading")}
       </div>
     );
   }

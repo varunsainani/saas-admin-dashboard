@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { MailWarning } from "lucide-react";
 import { Button } from "./ui/button";
 import {
@@ -12,6 +13,7 @@ import {
 
 // Shown to a freshly registered (unverified) user. Hidden once verified.
 export function VerifyBanner() {
+  const t = useTranslations("banner");
   const [token, setToken] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
@@ -30,7 +32,7 @@ export function VerifyBanner() {
       clearVerifyPending();
       setToken(null);
     } catch {
-      setMsg("Could not verify, please try again.");
+      setMsg(t("verifyFailed"));
       setBusy(false);
     }
   }
@@ -41,9 +43,9 @@ export function VerifyBanner() {
     try {
       const r = await resendVerification();
       if (r.token) setToken(r.token);
-      setMsg(r.sent ? "Verification email sent." : "Verification link refreshed.");
+      setMsg(r.sent ? t("emailSent") : t("linkRefreshed"));
     } catch {
-      setMsg("Could not resend right now.");
+      setMsg(t("resendFailed"));
     } finally {
       setBusy(false);
     }
@@ -52,16 +54,14 @@ export function VerifyBanner() {
   return (
     <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-warning/30 bg-warning/10 px-4 py-2.5 sm:px-6">
       <MailWarning className="h-4 w-4 shrink-0 text-warning" />
-      <span className="text-sm">
-        Verify your email to secure your account. We sent a link to your inbox.
-      </span>
+      <span className="text-sm">{t("message")}</span>
       <div className="ml-auto flex items-center gap-2">
         {msg && <span className="text-xs text-muted-foreground">{msg}</span>}
         <Button size="sm" variant="outline" onClick={resend} disabled={busy}>
-          Resend
+          {t("resend")}
         </Button>
         <Button size="sm" onClick={verifyNow} disabled={busy}>
-          Verify now
+          {t("verifyNow")}
         </Button>
       </div>
     </div>

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { LayoutDashboard, Users, Activity, CreditCard, Settings, LogOut } from "lucide-react";
 import { Logo } from "./logo";
 import { Avatar } from "./ui/avatar";
@@ -11,18 +12,18 @@ import { clearAuth } from "@/lib/api";
 
 const groups = [
   {
-    section: "Overview",
+    section: "sectionOverview",
     items: [
-      { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-      { href: "/users", label: "Users", icon: Users },
-      { href: "/activity", label: "Activity", icon: Activity },
+      { href: "/dashboard", label: "dashboard", icon: LayoutDashboard },
+      { href: "/users", label: "users", icon: Users },
+      { href: "/activity", label: "activity", icon: Activity },
     ],
   },
   {
-    section: "Account",
+    section: "sectionAccount",
     items: [
-      { href: "/billing", label: "Billing & Plans", icon: CreditCard },
-      { href: "/settings", label: "Settings", icon: Settings },
+      { href: "/billing", label: "billing", icon: CreditCard },
+      { href: "/settings", label: "settings", icon: Settings },
     ],
   },
 ];
@@ -30,6 +31,9 @@ const groups = [
 export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
   const router = useRouter();
+  const t = useTranslations("nav");
+  const tb = useTranslations("billing");
+  const tt = useTranslations("team");
 
   function logout() {
     clearAuth();
@@ -49,7 +53,9 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
           </div>
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-medium leading-tight">{organization.name}</p>
-            <p className="text-xs text-muted-foreground">{organization.plan} plan</p>
+            <p className="text-xs text-muted-foreground">
+              {t("planSuffix", { plan: tb(organization.planKey) })}
+            </p>
           </div>
         </div>
       </div>
@@ -58,7 +64,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
         {groups.map((group) => (
           <div key={group.section}>
             <p className="px-2 pb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-              {group.section}
+              {t(group.section)}
             </p>
             <div className="space-y-0.5">
               {group.items.map((item) => {
@@ -78,7 +84,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
                     )}
                   >
                     <Icon className="h-[18px] w-[18px] shrink-0" />
-                    {item.label}
+                    {t(item.label)}
                   </Link>
                 );
               })}
@@ -92,12 +98,12 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
           <Avatar name={currentUser.name} color={currentUser.avatarColor} className="h-8 w-8" />
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-medium leading-tight">{currentUser.name}</p>
-            <p className="truncate text-xs text-muted-foreground">{currentUser.title}</p>
+            <p className="truncate text-xs text-muted-foreground">{tt(currentUser.titleKey)}</p>
           </div>
         </div>
         <button
           onClick={logout}
-          aria-label="Log out"
+          aria-label={t("logout")}
           className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
         >
           <LogOut className="h-4 w-4" />

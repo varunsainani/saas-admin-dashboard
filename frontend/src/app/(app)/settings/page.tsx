@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 import { Sun, Moon, Check } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
@@ -22,13 +23,15 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 }
 
 const NOTIFICATIONS = [
-  { key: "product", label: "Product updates", desc: "News about features and improvements." },
-  { key: "digest", label: "Weekly digest", desc: "A summary of your workspace every Monday." },
-  { key: "security", label: "Security alerts", desc: "Sign-ins and security-related events." },
-  { key: "marketing", label: "Marketing emails", desc: "Tips, offers, and product announcements." },
+  { key: "product" },
+  { key: "digest" },
+  { key: "security" },
+  { key: "marketing" },
 ];
 
 export default function SettingsPage() {
+  const t = useTranslations("settings");
+  const tt = useTranslations("team");
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
@@ -41,46 +44,46 @@ export default function SettingsPage() {
   });
 
   const themes = [
-    { key: "light", label: "Light", icon: Sun },
-    { key: "dark", label: "Dark", icon: Moon },
+    { key: "light", icon: Sun },
+    { key: "dark", icon: Moon },
   ];
 
   return (
     <div className="max-w-3xl space-y-6 p-4 sm:p-6 lg:p-8">
       <PageHeader
-        title="Settings"
-        description="Manage your account, appearance, and notification preferences."
+        title={t("title")}
+        description={t("description")}
       />
 
       {/* Profile */}
       <Card>
         <CardHeader>
-          <CardTitle>Profile</CardTitle>
-          <p className="text-sm text-muted-foreground">Your personal information.</p>
+          <CardTitle>{t("profileTitle")}</CardTitle>
+          <p className="text-sm text-muted-foreground">{t("profileDesc")}</p>
         </CardHeader>
         <CardContent className="space-y-5">
           <div className="flex items-center gap-4">
             <Avatar name={currentUser.name} color={currentUser.avatarColor} className="h-14 w-14 text-base" />
             <Button variant="outline" size="sm">
-              Change avatar
+              {t("changeAvatar")}
             </Button>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Full name">
+            <Field label={t("fieldName")}>
               <Input defaultValue={currentUser.name} />
             </Field>
-            <Field label="Email">
+            <Field label={t("fieldEmail")}>
               <Input defaultValue={currentUser.email} type="email" />
             </Field>
-            <Field label="Job title">
-              <Input defaultValue={currentUser.title} />
+            <Field label={t("fieldTitle")}>
+              <Input defaultValue={tt(currentUser.titleKey)} />
             </Field>
-            <Field label="Role">
-              <Input defaultValue="Admin" disabled />
+            <Field label={t("fieldRole")}>
+              <Input defaultValue={tt(`role${currentUser.role}`)} disabled />
             </Field>
           </div>
           <div className="flex justify-end">
-            <Button>Save changes</Button>
+            <Button>{t("save")}</Button>
           </div>
         </CardContent>
       </Card>
@@ -88,18 +91,18 @@ export default function SettingsPage() {
       {/* Appearance */}
       <Card>
         <CardHeader>
-          <CardTitle>Appearance</CardTitle>
-          <p className="text-sm text-muted-foreground">Customize how Vantage looks for you.</p>
+          <CardTitle>{t("appearanceTitle")}</CardTitle>
+          <p className="text-sm text-muted-foreground">{t("appearanceDesc")}</p>
         </CardHeader>
         <CardContent>
           <div className="grid max-w-sm grid-cols-2 gap-3">
-            {themes.map((t) => {
-              const selected = mounted && theme === t.key;
-              const Icon = t.icon;
+            {themes.map((th) => {
+              const selected = mounted && theme === th.key;
+              const Icon = th.icon;
               return (
                 <button
-                  key={t.key}
-                  onClick={() => setTheme(t.key)}
+                  key={th.key}
+                  onClick={() => setTheme(th.key)}
                   className={cn(
                     "flex items-center gap-2 rounded-lg border p-3 text-sm font-medium transition-colors",
                     selected
@@ -108,7 +111,7 @@ export default function SettingsPage() {
                   )}
                 >
                   <Icon className="h-4 w-4" />
-                  {t.label}
+                  {t(`theme${th.key === "light" ? "Light" : "Dark"}`)}
                   {selected && <Check className="ml-auto h-4 w-4 text-primary" />}
                 </button>
               );
@@ -120,22 +123,25 @@ export default function SettingsPage() {
       {/* Notifications */}
       <Card>
         <CardHeader>
-          <CardTitle>Notifications</CardTitle>
-          <p className="text-sm text-muted-foreground">Choose what you want to hear about.</p>
+          <CardTitle>{t("notificationsTitle")}</CardTitle>
+          <p className="text-sm text-muted-foreground">{t("notificationsDesc")}</p>
         </CardHeader>
         <CardContent className="divide-y divide-border">
-          {NOTIFICATIONS.map((n) => (
-            <div key={n.key} className="flex items-center justify-between gap-4 py-3.5 first:pt-0 last:pb-0">
-              <div>
-                <p className="text-sm font-medium">{n.label}</p>
-                <p className="text-sm text-muted-foreground">{n.desc}</p>
+          {NOTIFICATIONS.map((n) => {
+            const Cap = n.key.charAt(0).toUpperCase() + n.key.slice(1);
+            return (
+              <div key={n.key} className="flex items-center justify-between gap-4 py-3.5 first:pt-0 last:pb-0">
+                <div>
+                  <p className="text-sm font-medium">{t(`notif${Cap}Label`)}</p>
+                  <p className="text-sm text-muted-foreground">{t(`notif${Cap}Desc`)}</p>
+                </div>
+                <Switch
+                  checked={!!toggles[n.key]}
+                  onChange={(v) => setToggles((s) => ({ ...s, [n.key]: v }))}
+                />
               </div>
-              <Switch
-                checked={!!toggles[n.key]}
-                onChange={(v) => setToggles((s) => ({ ...s, [n.key]: v }))}
-              />
-            </div>
-          ))}
+            );
+          })}
         </CardContent>
       </Card>
     </div>

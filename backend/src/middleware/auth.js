@@ -5,12 +5,12 @@ const { verifyAccessToken } = require("../lib/tokens");
 module.exports = function auth(req, res, next) {
   const header = req.headers.authorization || "";
   const token = header.startsWith("Bearer ") ? header.slice(7) : null;
-  if (!token) return res.status(401).json({ error: "Authentication required" });
+  if (!token) return res.status(401).json({ error: req.t("errors.auth.authenticationRequired") });
   try {
     const payload = verifyAccessToken(token);
     req.auth = { userId: payload.sub, orgId: payload.org, role: payload.role };
     next();
   } catch {
-    return res.status(401).json({ error: "Invalid or expired token" });
+    return res.status(401).json({ error: req.t("errors.auth.invalidOrExpiredToken") });
   }
 };

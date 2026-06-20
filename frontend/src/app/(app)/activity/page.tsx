@@ -1,42 +1,52 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { Users, CreditCard, ShieldCheck, Settings, Download } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Avatar } from "@/components/ui/avatar";
-import { cn, relativeTime } from "@/lib/utils";
+import { cn } from "@/lib/utils";
+import { useAppFormat } from "@/i18n/use-app-format";
 import { auditLog, NOW, type AuditCategory } from "@/lib/data";
 
-const meta: Record<AuditCategory, { label: string; icon: LucideIcon; color: string }> = {
-  user: { label: "User", icon: Users, color: "#6366f1" },
-  billing: { label: "Billing", icon: CreditCard, color: "#10b981" },
-  security: { label: "Security", icon: ShieldCheck, color: "#f59e0b" },
-  settings: { label: "Settings", icon: Settings, color: "#94a3b8" },
+const meta: Record<AuditCategory, { icon: LucideIcon; color: string }> = {
+  user: { icon: Users, color: "#6366f1" },
+  billing: { icon: CreditCard, color: "#10b981" },
+  security: { icon: ShieldCheck, color: "#f59e0b" },
+  settings: { icon: Settings, color: "#94a3b8" },
 };
 
-const FILTERS: { key: "ALL" | AuditCategory; label: string }[] = [
-  { key: "ALL", label: "All" },
-  { key: "user", label: "User" },
-  { key: "billing", label: "Billing" },
-  { key: "security", label: "Security" },
-  { key: "settings", label: "Settings" },
+const FILTERS: { key: "ALL" | AuditCategory }[] = [
+  { key: "ALL" },
+  { key: "user" },
+  { key: "billing" },
+  { key: "security" },
+  { key: "settings" },
 ];
 
+const categoryKey = (c: AuditCategory) =>
+  `category${c.charAt(0).toUpperCase() + c.slice(1)}` as const;
+
 export default function ActivityPage() {
+  const t = useTranslations("activity");
+  const tt = useTranslations("team");
+  const tb = useTranslations("billing");
+  const fmt = useAppFormat();
+
   const [filter, setFilter] = useState<"ALL" | AuditCategory>("ALL");
   const rows = auditLog.filter((e) => filter === "ALL" || e.category === filter);
 
   return (
     <div className="space-y-6 p-4 sm:p-6 lg:p-8">
       <PageHeader
-        title="Activity"
-        description="A complete audit trail of everything happening in your workspace."
+        title={t("title")}
+        description={t("description")}
         actions={
           <Button variant="outline">
             <Download className="h-4 w-4" />
-            Export log
+            {t("exportLog")}
           </Button>
         }
       />
@@ -53,7 +63,7 @@ export default function ActivityPage() {
                 : "text-muted-foreground hover:text-foreground",
             )}
           >
-            {f.label}
+            {f.key === "ALL" ? t("filterAll") : t(categoryKey(f.key))}
           </button>
         ))}
       </div>
@@ -62,6 +72,11 @@ export default function ActivityPage() {
         {rows.map((e) => {
           const m = meta[e.category];
           const Icon = m.icon;
+          const params: Record<string, string> = {};
+          if (e.name != null) params.name = e.name;
+          if (e.roleEnum != null) params.role = tt(`role${e.roleEnum}`);
+          if (e.planKey != null) params.plan = tb(e.planKey);
+          if (e.monthIndex != null) params.month = fmt.monthShort(e.monthIndex);
           return (
             <div
               key={e.id}
@@ -76,14 +91,14 @@ export default function ActivityPage() {
               <div className="min-w-0 flex-1">
                 <p className="text-sm leading-snug">
                   <span className="font-medium">{e.actor}</span>{" "}
-                  <span className="text-muted-foreground">{e.description}</span>
+                  <span className="text-muted-foreground">{t(e.descKey, params)}</span>
                 </p>
-                <p className="mt-0.5 text-xs text-muted-foreground">{m.label}</p>
+                <p className="mt-0.5 text-xs text-muted-foreground">{t(categoryKey(e.category))}</p>
               </div>
               <div className="hidden items-center gap-3 sm:flex">
                 <Avatar name={e.actor} color={e.actorColor} className="h-7 w-7 text-[10px]" />
                 <span className="w-28 text-right text-xs text-muted-foreground">
-                  {relativeTime(e.time, NOW)}
+                  {fmt.relativeTime(e.time, NOW)}
                 </span>
               </div>
             </div>
@@ -91,7 +106,7 @@ export default function ActivityPage() {
         })}
         {rows.length === 0 && (
           <p className="px-5 py-12 text-center text-sm text-muted-foreground">
-            No events in this category.
+            {t("empty")}
           </p>
         )}
       </div>

@@ -45,10 +45,10 @@ async function issueSession(user) {
 }
 
 const registerSchema = z.object({
-  name: z.string().min(2, "Name is too short"),
+  name: z.string().min(2, "validation.register.nameTooShort"),
   email: z.string().email(),
-  password: z.string().min(8, "Password must be at least 8 characters"),
-  organizationName: z.string().min(2, "Workspace name is too short"),
+  password: z.string().min(8, "validation.register.passwordTooShort"),
+  organizationName: z.string().min(2, "validation.register.workspaceNameTooShort"),
 });
 
 const register = asyncHandler(async (req, res) => {
@@ -56,7 +56,7 @@ const register = asyncHandler(async (req, res) => {
   const normalized = email.toLowerCase();
 
   if (await prisma.user.findUnique({ where: { email: normalized } })) {
-    throw new HttpError(409, "An account with that email already exists");
+    throw new HttpError(409, "errors.auth.emailTaken");
   }
 
   const org = await prisma.organization.create({
@@ -92,7 +92,12 @@ const register = asyncHandler(async (req, res) => {
   }
 
   const verifyToken = signVerifyToken(user.id);
-  await sendVerificationEmail({ to: user.email, name: user.name, token: verifyToken });
+  await sendVerificationEmail({
+    to: user.email,
+    name: user.name,
+    token: verifyToken,
+    locale: req.locale,
+  });
 
   await logAudit({
     orgId: org.id,
@@ -110,7 +115,7 @@ const register = asyncHandler(async (req, res) => {
 
 const loginSchema = z.object({
   email: z.string().email(),
-  password: z.string().min(1, "Password is required"),
+  password: z.string().min(1, "validation.login.passwordRequired"),
 });
 
 const login = asyncHandler(async (req, res) => {
@@ -118,7 +123,7 @@ const login = asyncHandler(async (req, res) => {
   const user = await prisma.user.findUnique({ where: { email: email.toLowerCase() } });
 
   if (!user || user.status === "SUSPENDED" || !(await bcrypt.compare(password, user.passwordHash))) {
-    throw new HttpError(401, "Invalid email or password");
+    throw new HttpError(401, "errors.auth.invalidCredentials");
   }
 
   await prisma.user.update({ where: { id: user.id }, data: { lastActiveAt: new Date() } });
@@ -130,14 +135,14 @@ const login = asyncHandler(async (req, res) => {
 
 const refresh = asyncHandler(async (req, res) => {
   const token = req.body.refreshToken;
-  if (!token) throw new HttpError(400, "Refresh token is required");
+  if (!token) throw new HttpError(400, "errors.auth.refreshTokenRequired");
 
   const stored = await prisma.refreshToken.findUnique({
     where: { tokenHash: hashToken(token) },
     include: { user: true },
   });
   if (!stored || stored.revoked || stored.expiresAt < new Date()) {
-    throw new HttpError(401, "Invalid or expired refresh token");
+    throw new HttpError(401, "errors.auth.invalidRefreshToken");
   }
 
   // Rotate: the used refresh token is revoked and replaced.
@@ -159,7 +164,7 @@ const logout = asyncHandler(async (req, res) => {
 
 const me = asyncHandler(async (req, res) => {
   const user = await prisma.user.findUnique({ where: { id: req.auth.userId } });
-  if (!user) throw new HttpError(404, "User not found");
+  if (!user) throw new HttpError(404, "errors.common.userNotFound");
   res.json({ user: publicUser(user) });
 });
 
@@ -171,7 +176,7 @@ const verifyEmail = asyncHandler(async (req, res) => {
   try {
     payload = verifyVerifyToken(token);
   } catch {
-    throw new HttpError(400, "Invalid or expired verification token");
+    throw new HttpError(400, "errors.auth.invalidVerificationToken");
   }
   await prisma.user.update({ where: { id: payload.sub }, data: { emailVerified: true } });
   res.json({ ok: true });
@@ -180,10 +185,15 @@ const verifyEmail = asyncHandler(async (req, res) => {
 // Re-send the verification email for the signed-in user.
 const resendVerification = asyncHandler(async (req, res) => {
   const user = await prisma.user.findUnique({ where: { id: req.auth.userId } });
-  if (!user) throw new HttpError(404, "User not found");
+  if (!user) throw new HttpError(404, "errors.common.userNotFound");
   if (user.emailVerified) return res.json({ ok: true, alreadyVerified: true });
   const token = signVerifyToken(user.id);
-  const result = await sendVerificationEmail({ to: user.email, name: user.name, token });
+  const result = await sendVerificationEmail({
+    to: user.email,
+    name: user.name,
+    token,
+    locale: req.locale,
+  });
   // token returned for demo convenience (test domain restricts real delivery).
   res.json({ ok: true, sent: result.sent, token });
 });

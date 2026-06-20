@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { AuthAside } from "@/components/auth-aside";
 import { Logo } from "@/components/logo";
@@ -10,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { register } from "@/lib/api";
 
 export default function RegisterPage() {
+  const t = useTranslations("auth.register");
   const router = useRouter();
   const [form, setForm] = useState({ name: "", organizationName: "", email: "", password: "" });
   const [error, setError] = useState("");
@@ -26,7 +28,7 @@ export default function RegisterPage() {
       await register(form);
       router.replace("/dashboard");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not create account");
+      setError(err instanceof Error ? err.message : t("errorFallback"));
       setLoading(false);
     }
   }
@@ -39,18 +41,18 @@ export default function RegisterPage() {
           <div className="mb-8 lg:hidden">
             <Logo />
           </div>
-          <h2 className="text-2xl font-semibold tracking-tight">Create your workspace</h2>
+          <h2 className="text-2xl font-semibold tracking-tight">{t("heading")}</h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Start managing your team in minutes.
+            {t("subtitle")}
           </p>
 
           <form onSubmit={onSubmit} className="mt-6 space-y-4">
             <label className="block space-y-1.5">
-              <span className="text-sm font-medium">Full name</span>
+              <span className="text-sm font-medium">{t("name")}</span>
               <Input required value={form.name} onChange={set("name")} placeholder="Alex Morgan" />
             </label>
             <label className="block space-y-1.5">
-              <span className="text-sm font-medium">Workspace name</span>
+              <span className="text-sm font-medium">{t("workspace")}</span>
               <Input
                 required
                 value={form.organizationName}
@@ -59,7 +61,7 @@ export default function RegisterPage() {
               />
             </label>
             <label className="block space-y-1.5">
-              <span className="text-sm font-medium">Work email</span>
+              <span className="text-sm font-medium">{t("email")}</span>
               <Input
                 type="email"
                 required
@@ -69,13 +71,13 @@ export default function RegisterPage() {
               />
             </label>
             <label className="block space-y-1.5">
-              <span className="text-sm font-medium">Password</span>
+              <span className="text-sm font-medium">{t("password")}</span>
               <Input
                 type="password"
                 required
                 value={form.password}
                 onChange={set("password")}
-                placeholder="At least 8 characters"
+                placeholder={t("passwordPlaceholder")}
               />
             </label>
 
@@ -84,14 +86,14 @@ export default function RegisterPage() {
             )}
 
             <Button type="submit" disabled={loading} className="w-full">
-              {loading ? "Creating account…" : "Create account"}
+              {loading ? t("submitLoading") : t("submit")}
             </Button>
           </form>
 
           <p className="mt-6 text-center text-sm text-muted-foreground">
-            Already have an account?{" "}
+            {t("signinPrompt")}{" "}
             <Link href="/login" className="font-medium text-primary hover:underline">
-              Sign in
+              {t("signinLink")}
             </Link>
           </p>
         </div>

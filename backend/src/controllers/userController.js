@@ -28,7 +28,7 @@ const inviteSchema = z.object({
 const create = asyncHandler(async (req, res) => {
   const { name, email, role, title } = inviteSchema.parse(req.body);
   if (await prisma.user.findUnique({ where: { email: email.toLowerCase() } })) {
-    throw new HttpError(409, "A user with that email already exists");
+    throw new HttpError(409, "errors.users.emailTaken");
   }
   // Invited users get an unusable random password until they accept.
   const passwordHash = await bcrypt.hash(crypto.randomBytes(24).toString("hex"), 10);
@@ -62,13 +62,13 @@ const updateSchema = z
     status: z.enum(["ACTIVE", "INVITED", "SUSPENDED"]).optional(),
     title: z.string().optional(),
   })
-  .refine((d) => Object.keys(d).length > 0, { message: "Nothing to update" });
+  .refine((d) => Object.keys(d).length > 0, { message: "validation.update.nothingToUpdate" });
 
 const update = asyncHandler(async (req, res) => {
   const target = await prisma.user.findFirst({
     where: { id: req.params.id, organizationId: req.auth.orgId },
   });
-  if (!target) throw new HttpError(404, "User not found");
+  if (!target) throw new HttpError(404, "errors.common.userNotFound");
 
   const data = updateSchema.parse(req.body);
   const user = await prisma.user.update({ where: { id: target.id }, data });
@@ -85,12 +85,12 @@ const update = asyncHandler(async (req, res) => {
 
 const remove = asyncHandler(async (req, res) => {
   if (req.params.id === req.auth.userId) {
-    throw new HttpError(400, "You cannot remove your own account");
+    throw new HttpError(400, "errors.users.cannotRemoveSelf");
   }
   const target = await prisma.user.findFirst({
     where: { id: req.params.id, organizationId: req.auth.orgId },
   });
-  if (!target) throw new HttpError(404, "User not found");
+  if (!target) throw new HttpError(404, "errors.common.userNotFound");
 
   await prisma.user.delete({ where: { id: target.id } });
   await logAudit({

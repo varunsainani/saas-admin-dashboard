@@ -2,12 +2,14 @@
 
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { CheckCircle2, XCircle, Loader2 } from "lucide-react";
 import { Logo } from "@/components/logo";
 import { verifyEmail, clearVerifyPending } from "@/lib/api";
 
 function VerifyInner() {
+  const t = useTranslations("auth.verify");
   const params = useSearchParams();
   const token = params.get("token");
   const [state, setState] = useState<"loading" | "ok" | "error">("loading");
@@ -16,7 +18,7 @@ function VerifyInner() {
   useEffect(() => {
     if (!token) {
       setState("error");
-      setError("This verification link is missing its token.");
+      setError(t("missingToken"));
       return;
     }
     verifyEmail(token)
@@ -26,9 +28,9 @@ function VerifyInner() {
       })
       .catch((e) => {
         setState("error");
-        setError(e instanceof Error ? e.message : "Verification failed.");
+        setError(e instanceof Error ? e.message : t("errorFallback"));
       });
-  }, [token]);
+  }, [token, t]);
 
   return (
     <div className="w-full max-w-sm text-center">
@@ -39,7 +41,7 @@ function VerifyInner() {
       {state === "loading" && (
         <>
           <Loader2 className="mx-auto h-9 w-9 animate-spin text-muted-foreground" />
-          <p className="mt-4 text-sm text-muted-foreground">Verifying your email…</p>
+          <p className="mt-4 text-sm text-muted-foreground">{t("loading")}</p>
         </>
       )}
 
@@ -48,13 +50,13 @@ function VerifyInner() {
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-success/10">
             <CheckCircle2 className="h-7 w-7 text-success" />
           </div>
-          <h1 className="mt-4 text-xl font-semibold tracking-tight">Email verified</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Your email address is confirmed.</p>
+          <h1 className="mt-4 text-xl font-semibold tracking-tight">{t("successHeading")}</h1>
+          <p className="mt-1 text-sm text-muted-foreground">{t("successSubtitle")}</p>
           <Link
             href="/dashboard"
             className="mt-6 inline-flex h-9 w-full items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
           >
-            Go to dashboard
+            {t("successCta")}
           </Link>
         </>
       )}
@@ -64,13 +66,13 @@ function VerifyInner() {
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-danger/10">
             <XCircle className="h-7 w-7 text-danger" />
           </div>
-          <h1 className="mt-4 text-xl font-semibold tracking-tight">Verification failed</h1>
+          <h1 className="mt-4 text-xl font-semibold tracking-tight">{t("errorHeading")}</h1>
           <p className="mt-1 text-sm text-muted-foreground">{error}</p>
           <Link
             href="/dashboard"
             className="mt-6 inline-flex h-9 w-full items-center justify-center rounded-md border border-border px-4 text-sm font-medium transition-colors hover:bg-muted"
           >
-            Back to dashboard
+            {t("errorCta")}
           </Link>
         </>
       )}
@@ -79,9 +81,10 @@ function VerifyInner() {
 }
 
 export default function VerifyEmailPage() {
+  const t = useTranslations("auth.verify");
   return (
     <div className="flex min-h-screen items-center justify-center px-6 py-12">
-      <Suspense fallback={<p className="text-sm text-muted-foreground">Loading…</p>}>
+      <Suspense fallback={<p className="text-sm text-muted-foreground">{t("suspense")}</p>}>
         <VerifyInner />
       </Suspense>
     </div>
