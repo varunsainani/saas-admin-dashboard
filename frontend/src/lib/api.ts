@@ -6,6 +6,7 @@ const BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 const TOKEN_KEY = "vantage_token";
 const REFRESH_KEY = "vantage_refresh";
 const DEMO_KEY = "vantage_demo";
+const VERIFY_KEY = "vantage_verify";
 
 export function getToken() {
   if (typeof window === "undefined") return null;
@@ -26,6 +27,16 @@ export function clearAuth() {
   window.localStorage.removeItem(TOKEN_KEY);
   window.localStorage.removeItem(REFRESH_KEY);
   window.localStorage.removeItem(DEMO_KEY);
+  window.localStorage.removeItem(VERIFY_KEY);
+}
+
+export function getVerifyPending() {
+  if (typeof window === "undefined") return null;
+  return window.localStorage.getItem(VERIFY_KEY);
+}
+
+export function clearVerifyPending() {
+  if (typeof window !== "undefined") window.localStorage.removeItem(VERIFY_KEY);
 }
 
 export function isAuthed() {
@@ -61,6 +72,7 @@ interface SessionResponse {
   user: { id: string; name: string; email: string; role: string };
   accessToken: string;
   refreshToken: string;
+  verifyToken?: string;
 }
 
 export async function login(email: string, password: string) {
@@ -83,5 +95,26 @@ export async function register(payload: {
     body: payload,
   });
   setSession(data.accessToken, data.refreshToken);
+  if (data.verifyToken && typeof window !== "undefined") {
+    window.localStorage.setItem(VERIFY_KEY, data.verifyToken);
+  }
+  return data;
+}
+
+export async function verifyEmail(token: string) {
+  return api<{ ok: boolean }>("/api/auth/verify-email", {
+    method: "POST",
+    body: { token },
+  });
+}
+
+export async function resendVerification() {
+  const data = await api<{ ok: boolean; sent?: boolean; token?: string }>(
+    "/api/auth/resend-verification",
+    { method: "POST" },
+  );
+  if (data.token && typeof window !== "undefined") {
+    window.localStorage.setItem(VERIFY_KEY, data.token);
+  }
   return data;
 }

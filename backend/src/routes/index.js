@@ -15,6 +15,7 @@ router.post("/auth/login", authC.login);
 router.post("/auth/refresh", authC.refresh);
 router.post("/auth/logout", authC.logout);
 router.post("/auth/verify-email", authC.verifyEmail);
+router.post("/auth/resend-verification", auth, authC.resendVerification);
 router.get("/auth/me", auth, authC.me);
 
 // Users (RBAC enforced)

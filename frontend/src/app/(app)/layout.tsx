@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Sidebar } from "@/components/sidebar";
 import { Topbar } from "@/components/topbar";
+import { VerifyBanner } from "@/components/verify-banner";
 import { isAuthed } from "@/lib/api";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
@@ -47,6 +48,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <Topbar onMenu={() => setOpen(true)} />
+        <VerifyBanner />
         <main className="flex-1 overflow-y-auto">{children}</main>
       </div>
     </div>

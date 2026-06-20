@@ -6,6 +6,7 @@ const asyncHandler = require("../lib/async-handler");
 const { logAudit } = require("../lib/audit");
 const { publicUser } = require("../lib/serialize");
 const { randomColor } = require("../lib/constants");
+const { sendVerificationEmail } = require("../lib/email");
 const {
   signAccessToken,
   generateRefreshToken,
@@ -91,8 +92,7 @@ const register = asyncHandler(async (req, res) => {
   }
 
   const verifyToken = signVerifyToken(user.id);
-  // In production this link is emailed; here we log it and return it for the demo.
-  console.log(`[email] verify ${user.email}: /verify-email?token=${verifyToken}`);
+  await sendVerificationEmail({ to: user.email, name: user.name, token: verifyToken });
 
   await logAudit({
     orgId: org.id,
@@ -103,6 +103,8 @@ const register = asyncHandler(async (req, res) => {
   });
 
   const session = await issueSession(user);
+  // verifyToken is returned so the demo can complete verification without inbox
+  // access (the Resend test domain only delivers to the account owner).
   res.status(201).json({ user: publicUser(user), ...session, verifyToken });
 });
 
@@ -175,4 +177,15 @@ const verifyEmail = asyncHandler(async (req, res) => {
   res.json({ ok: true });
 });
 
-module.exports = { register, login, refresh, logout, me, verifyEmail };
+// Re-send the verification email for the signed-in user.
+const resendVerification = asyncHandler(async (req, res) => {
+  const user = await prisma.user.findUnique({ where: { id: req.auth.userId } });
+  if (!user) throw new HttpError(404, "User not found");
+  if (user.emailVerified) return res.json({ ok: true, alreadyVerified: true });
+  const token = signVerifyToken(user.id);
+  const result = await sendVerificationEmail({ to: user.email, name: user.name, token });
+  // token returned for demo convenience (test domain restricts real delivery).
+  res.json({ ok: true, sent: result.sent, token });
+});
+
+module.exports = { register, login, refresh, logout, me, verifyEmail, resendVerification };
