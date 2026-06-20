@@ -10,7 +10,7 @@ import {
   YAxis,
 } from "recharts";
 import { useTranslations } from "next-intl";
-import { monthlySeries } from "@/lib/data";
+import type { SeriesPoint } from "@/lib/api";
 import { useAppFormat } from "@/i18n/use-app-format";
 
 type ChartTooltip = {
@@ -19,7 +19,7 @@ type ChartTooltip = {
   payload?: Array<{ value?: number | string }>;
 };
 
-function CustomersTooltip({ active, payload, label }: ChartTooltip) {
+function NewMembersTooltip({ active, payload, label }: ChartTooltip) {
   const t = useTranslations("charts");
   const fmt = useAppFormat();
   if (!active || !payload || payload.length === 0) return null;
@@ -28,18 +28,19 @@ function CustomersTooltip({ active, payload, label }: ChartTooltip) {
     <div className="rounded-lg border border-border bg-popover px-3 py-2 text-xs shadow-lg">
       <p className="mb-1 font-medium text-popover-foreground">{fmt.monthShort(Number(label))}</p>
       <p className="text-muted-foreground">
-        {t("newCustomers")}{" "}
+        {t("newMembers")}{" "}
         <span className="font-semibold text-foreground">{fmt.number(value)}</span>
       </p>
     </div>
   );
 }
 
-export function CustomersChart() {
+// New members added per month.
+export function CustomersChart({ data }: { data: SeriesPoint[] }) {
   const fmt = useAppFormat();
   return (
     <ResponsiveContainer width="100%" height={260}>
-      <BarChart data={monthlySeries} margin={{ left: 0, right: 8, top: 8, bottom: 0 }}>
+      <BarChart data={data} margin={{ left: 0, right: 8, top: 8, bottom: 0 }}>
         <CartesianGrid vertical={false} stroke="var(--border)" strokeDasharray="3 3" />
         <XAxis
           dataKey="monthIndex"
@@ -51,12 +52,14 @@ export function CustomersChart() {
         />
         <YAxis
           width={32}
+          allowDecimals={false}
           tickLine={false}
           axisLine={false}
           tick={{ fill: "var(--muted-foreground)", fontSize: 12 }}
+          tickFormatter={(v: number) => fmt.number(v)}
         />
-        <Tooltip content={<CustomersTooltip />} cursor={{ fill: "var(--muted)", opacity: 0.5 }} />
-        <Bar dataKey="customers" fill="var(--primary)" radius={[4, 4, 0, 0]} maxBarSize={26} />
+        <Tooltip content={<NewMembersTooltip />} cursor={{ fill: "var(--muted)", opacity: 0.5 }} />
+        <Bar dataKey="newMembers" fill="var(--primary)" radius={[4, 4, 0, 0]} maxBarSize={26} />
       </BarChart>
     </ResponsiveContainer>
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowDownRight, ArrowUpRight, Calendar, Download } from "lucide-react";
+import { Calendar, Download } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,7 +10,16 @@ import { RevenueChart } from "@/components/charts/revenue-chart";
 import { CustomersChart } from "@/components/charts/customers-chart";
 import { cn } from "@/lib/utils";
 import { useAppFormat } from "@/i18n/use-app-format";
-import { kpis, planDistribution, auditLog, currentUser, NOW } from "@/lib/data";
+import { useLive } from "@/lib/use-live";
+import { getMe, getOverview, getAudit, type ApiRole } from "@/lib/api";
+import { demoOverview, normalizeAudit } from "@/lib/mappers";
+import { auditLog, currentUser, NOW, type AuditEvent } from "@/lib/data";
+
+const ROLE_COLOR: Record<ApiRole, string> = {
+  ADMIN: "#6366f1",
+  MANAGER: "#10b981",
+  USER: "#94a3b8",
+};
 
 export default function DashboardPage() {
   const t = useTranslations("dashboard");
@@ -19,13 +28,50 @@ export default function DashboardPage() {
   const tt = useTranslations("team");
   const fmt = useAppFormat();
 
-  const totalCustomers = planDistribution.reduce((s, p) => s + p.customers, 0);
+  const { data: overview } = useLive(getOverview, demoOverview());
+  const { data: events } = useLive<AuditEvent[]>(
+    async () => (await getAudit(8)).map(normalizeAudit),
+    auditLog.slice(0, 8),
+  );
+  const { data: me } = useLive<{ name: string }>(
+    async () => ({ name: (await getMe()).name }),
+    { name: currentUser.name },
+  );
+
+  const m = overview.members;
+  const sub = overview.subscription;
+  const seatsUsed = sub?.seatsUsed ?? m.total;
+  const seats = sub?.seats ?? m.total;
+  const newThisMonth = overview.series.at(-1)?.newMembers ?? 0;
+
+  const cards = [
+    {
+      key: "kpiTotalMembers",
+      value: fmt.number(m.total),
+      sub: t("subNewThisMonth", { count: newThisMonth }),
+      accent: newThisMonth > 0,
+    },
+    {
+      key: "kpiActiveMembers",
+      value: fmt.number(m.active),
+      sub: t("subOfTotalActive", { count: m.active, total: m.total }),
+    },
+    { key: "kpiPendingInvites", value: fmt.number(m.invited), sub: t("subAwaiting") },
+    { key: "kpiSeatsUsed", value: fmt.number(seatsUsed), sub: t("subOfSeats", { total: seats }) },
+  ];
+
+  const roleRows = (Object.keys(ROLE_COLOR) as ApiRole[]).map((role) => ({
+    role,
+    count: overview.roles[role],
+    color: ROLE_COLOR[role],
+  }));
+  const totalRoles = roleRows.reduce((s, r) => s + r.count, 0) || 1;
 
   return (
     <div className="space-y-6 p-4 sm:p-6 lg:p-8">
       <PageHeader
         title={t("title")}
-        description={t("welcome", { firstName: currentUser.name.split(" ")[0] })}
+        description={t("welcome", { firstName: me.name.split(" ")[0] })}
         actions={
           <>
             <Button variant="outline" size="md" className="hidden sm:inline-flex">
@@ -42,74 +88,52 @@ export default function DashboardPage() {
 
       {/* KPIs */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {kpis.map((k) => {
-          const down = k.delta < 0;
-          const Arrow = down ? ArrowDownRight : ArrowUpRight;
-          const value =
-            k.format === "currency"
-              ? fmt.currency(k.value)
-              : k.format === "number"
-                ? fmt.number(k.value)
-                : fmt.percent(k.value);
-          return (
-            <Card key={k.key} className="p-5">
-              <p className="text-sm text-muted-foreground">{t(k.key)}</p>
-              <div className="mt-2 flex items-end justify-between">
-                <span className="text-2xl font-semibold tracking-tight">{value}</span>
-                <span
-                  className={cn(
-                    "inline-flex items-center gap-0.5 text-xs font-medium",
-                    k.positive ? "text-success" : "text-danger",
-                  )}
-                >
-                  <Arrow className="h-3.5 w-3.5" />
-                  {fmt.percent(k.delta, true)}
-                </span>
-              </div>
-              <p className="mt-1 text-xs text-muted-foreground">{t("vsLastMonth")}</p>
-            </Card>
-          );
-        })}
+        {cards.map((c) => (
+          <Card key={c.key} className="p-5">
+            <p className="text-sm text-muted-foreground">{t(c.key)}</p>
+            <div className="mt-2 text-2xl font-semibold tracking-tight">{c.value}</div>
+            <p className={cn(c.accent ? "text-success" : "text-muted-foreground", "mt-1 text-xs")}>
+              {c.sub}
+            </p>
+          </Card>
+        ))}
       </div>
 
-      {/* Revenue + plan mix */}
+      {/* Team growth + role mix */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <Card className="lg:col-span-2">
-          <CardHeader className="flex-row items-center justify-between">
-            <div>
-              <CardTitle>{t("revenueTitle")}</CardTitle>
-              <p className="text-sm text-muted-foreground">{t("revenueSubtitle")}</p>
-            </div>
-            <span className="text-sm font-medium text-success">{fmt.percent(12.5, true)}</span>
+          <CardHeader>
+            <CardTitle>{t("teamGrowthTitle")}</CardTitle>
+            <p className="text-sm text-muted-foreground">{t("teamGrowthSubtitle")}</p>
           </CardHeader>
           <CardContent>
-            <RevenueChart />
+            <RevenueChart data={overview.series} />
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle>{t("plansTitle")}</CardTitle>
+            <CardTitle>{t("rolesTitle")}</CardTitle>
             <p className="text-sm text-muted-foreground">
-              {t("plansTotal", { count: fmt.number(totalCustomers) })}
+              {t("rolesTotal", { count: fmt.number(m.total) })}
             </p>
           </CardHeader>
           <CardContent className="space-y-4">
-            {planDistribution.map((p) => {
-              const pct = Math.round((p.customers / totalCustomers) * 100);
+            {roleRows.map((r) => {
+              const pct = Math.round((r.count / totalRoles) * 100);
               return (
-                <div key={p.nameKey}>
+                <div key={r.role}>
                   <div className="flex items-center justify-between text-sm">
-                    <span className="font-medium">{tb(p.nameKey)}</span>
+                    <span className="font-medium">{tt(`role${r.role}`)}</span>
                     <span className="text-muted-foreground">
-                      {fmt.number(p.customers)}
+                      {fmt.number(r.count)}
                       <span className="ml-1.5 text-xs">{fmt.percent(pct)}</span>
                     </span>
                   </div>
                   <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-muted">
                     <div
                       className="h-full rounded-full"
-                      style={{ width: `${pct}%`, backgroundColor: p.color }}
+                      style={{ width: `${pct}%`, backgroundColor: r.color }}
                     />
                   </div>
                 </div>
@@ -119,15 +143,15 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      {/* New customers + activity */}
+      {/* New members + activity */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle>{t("newCustomersTitle")}</CardTitle>
-            <p className="text-sm text-muted-foreground">{t("newCustomersSubtitle")}</p>
+            <CardTitle>{t("newMembersTitle")}</CardTitle>
+            <p className="text-sm text-muted-foreground">{t("newMembersSubtitle")}</p>
           </CardHeader>
           <CardContent>
-            <CustomersChart />
+            <CustomersChart data={overview.series} />
           </CardContent>
         </Card>
 
@@ -139,7 +163,7 @@ export default function DashboardPage() {
             </Button>
           </CardHeader>
           <CardContent className="space-y-4">
-            {auditLog.slice(0, 6).map((e) => (
+            {events.slice(0, 6).map((e) => (
               <div key={e.id} className="flex items-start gap-3">
                 <Avatar name={e.actor} color={e.actorColor} className="h-7 w-7 text-[10px]" />
                 <div className="min-w-0 flex-1">

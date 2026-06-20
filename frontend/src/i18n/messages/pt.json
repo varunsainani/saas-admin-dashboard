@@ -107,11 +107,27 @@
     "kpiMrr": "Receita recorrente mensal",
     "kpiActiveUsers": "Usuários ativos",
     "kpiNewSignups": "Novos cadastros",
-    "kpiChurnRate": "Taxa de cancelamento"
+    "kpiChurnRate": "Taxa de cancelamento",
+    "kpiTotalMembers": "Total de membros",
+    "kpiActiveMembers": "Membros ativos",
+    "kpiPendingInvites": "Convites pendentes",
+    "kpiSeatsUsed": "Assentos usados",
+    "subNewThisMonth": "+{count} este mês",
+    "subOfTotalActive": "{count} de {total} ativos",
+    "subAwaiting": "aguardando resposta",
+    "subOfSeats": "de {total} assentos",
+    "teamGrowthTitle": "Crescimento da equipe",
+    "teamGrowthSubtitle": "Total de membros nos últimos 12 meses",
+    "newMembersTitle": "Novos membros",
+    "newMembersSubtitle": "Adicionados por mês",
+    "rolesTitle": "Membros por função",
+    "rolesTotal": "{count} no total"
   },
   "charts": {
     "mrr": "MRR",
-    "newCustomers": "Novos clientes"
+    "newCustomers": "Novos clientes",
+    "members": "Membros",
+    "newMembers": "Novos membros"
   },
   "users": {
     "title": "Usuários",
@@ -128,7 +144,22 @@
     "filterAdmins": "Administradores",
     "filterManagers": "Gerentes",
     "filterMembers": "Membros",
-    "pending": "Pendente"
+    "pending": "Pendente",
+    "inviteTitle": "Convidar um usuário",
+    "inviteName": "Nome completo",
+    "inviteEmail": "E-mail",
+    "inviteRole": "Função",
+    "inviteSend": "Enviar convite",
+    "inviteSending": "Enviando…",
+    "cancel": "Cancelar",
+    "makeAdmin": "Tornar administrador",
+    "makeManager": "Tornar gerente",
+    "makeMember": "Tornar membro",
+    "suspend": "Suspender",
+    "activate": "Ativar",
+    "remove": "Remover",
+    "inviteError": "Não foi possível convidar o usuário",
+    "removeConfirm": "Remover {name} do espaço de trabalho?"
   },
   "team": {
     "roleADMIN": "Administrador",
@@ -214,7 +245,10 @@
     "descEnabled2fa": "ativou a autenticação de dois fatores",
     "descUpdatedBranding": "atualizou a identidade visual do espaço de trabalho",
     "descDownloadedInvoice": "baixou a fatura de {month}",
-    "descResetPassword": "redefiniu a própria senha"
+    "descResetPassword": "redefiniu a própria senha",
+    "descRemovedUser": "removeu {name}",
+    "descCreatedWorkspace": "criou o espaço de trabalho",
+    "descGeneric": "fez uma alteração"
   },
   "settings": {
     "title": "Configurações",

@@ -2,7 +2,10 @@
 // attaches it as a Bearer token. A demo flag lets the public demo open the
 // dashboard without a running backend.
 
-const BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+// Same-origin by default: requests go to "/api/..." and are proxied to the
+// backend by a Next.js rewrite, so the app lives behind a single URL. Set
+// NEXT_PUBLIC_API_URL only to bypass the proxy and call the backend directly.
+const BASE = process.env.NEXT_PUBLIC_API_URL || "";
 const TOKEN_KEY = "vantage_token";
 const REFRESH_KEY = "vantage_refresh";
 const DEMO_KEY = "vantage_demo";
@@ -128,4 +131,121 @@ export async function resendVerification() {
     window.localStorage.setItem(VERIFY_KEY, data.token);
   }
   return data;
+}
+
+// ---------------------------------------------------------------------------
+// Live workspace data. A real session (access token) means we fetch from the
+// backend; the public demo without a token falls back to sample data in the UI.
+// ---------------------------------------------------------------------------
+
+export type ApiRole = "ADMIN" | "MANAGER" | "USER";
+export type ApiStatus = "ACTIVE" | "INVITED" | "SUSPENDED";
+
+export interface ApiUser {
+  id: string;
+  organizationId: string;
+  name: string;
+  email: string;
+  role: ApiRole;
+  status: ApiStatus;
+  emailVerified: boolean;
+  title: string | null;
+  avatarColor: string | null;
+  lastActiveAt: string | null;
+  createdAt: string;
+}
+
+export interface SeriesPoint {
+  monthIndex: number;
+  newMembers: number;
+  totalMembers: number;
+}
+
+export interface OverviewResponse {
+  members: { total: number; active: number; invited: number; suspended: number };
+  roles: { ADMIN: number; MANAGER: number; USER: number };
+  subscription: {
+    plan: string;
+    status: string;
+    seatsUsed: number;
+    seats: number;
+    currentPeriodEnd: string;
+  } | null;
+  series: SeriesPoint[];
+}
+
+export interface ApiAuditEvent {
+  id: string;
+  action: string;
+  target: string | null;
+  metadata: Record<string, unknown> | null;
+  createdAt: string;
+  actor: { id: string; name: string; avatarColor: string | null } | null;
+}
+
+export interface ApiSubscription {
+  id: string;
+  planId: string;
+  plan: {
+    id: string;
+    name: string;
+    priceMonthly: number;
+    seats: number;
+    features: string[];
+    popular: boolean;
+  };
+  status: string;
+  seatsUsed: number;
+  currentPeriodEnd: string;
+}
+
+// True when a real backend session exists (vs. the client-only demo flag).
+export function hasSession() {
+  return !!getToken();
+}
+
+export async function getMe() {
+  const data = await api<{ user: ApiUser }>("/api/auth/me");
+  return data.user;
+}
+
+export async function getUsers() {
+  const data = await api<{ users: ApiUser[] }>("/api/users");
+  return data.users;
+}
+
+export async function inviteUser(payload: {
+  name: string;
+  email: string;
+  role: ApiRole;
+  title?: string;
+}) {
+  const data = await api<{ user: ApiUser }>("/api/users", { method: "POST", body: payload });
+  return data.user;
+}
+
+export async function updateUser(
+  id: string,
+  patch: { role?: ApiRole; status?: ApiStatus; title?: string },
+) {
+  const data = await api<{ user: ApiUser }>(`/api/users/${id}`, { method: "PATCH", body: patch });
+  return data.user;
+}
+
+export async function deleteUser(id: string) {
+  return api<{ ok: boolean }>(`/api/users/${id}`, { method: "DELETE" });
+}
+
+export async function getOverview() {
+  return api<OverviewResponse>("/api/analytics/overview");
+}
+
+export async function getAudit(limit = 50) {
+  const data = await api<{ events: ApiAuditEvent[] }>(`/api/audit?limit=${limit}`);
+  return data.events;
+}
+
+export async function getSubscription() {
+  const data = await api<{ subscription: ApiSubscription | null }>("/api/subscription");
+  return data.subscription;
 }

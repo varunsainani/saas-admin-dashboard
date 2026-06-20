@@ -11,7 +11,17 @@ import { Input } from "@/components/ui/input";
 import { Avatar } from "@/components/ui/avatar";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
+import { getMe, type ApiUser } from "@/lib/api";
+import { useLive } from "@/lib/use-live";
 import { currentUser } from "@/lib/data";
+
+const DEMO_ME = {
+  name: currentUser.name,
+  email: currentUser.email,
+  role: currentUser.role,
+  avatarColor: currentUser.avatarColor,
+  title: null as string | null,
+};
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -36,6 +46,8 @@ export default function SettingsPage() {
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
+  const { data: me } = useLive<ApiUser | typeof DEMO_ME>(getMe, DEMO_ME);
+
   const [toggles, setToggles] = useState<Record<string, boolean>>({
     product: true,
     digest: true,
@@ -56,30 +68,30 @@ export default function SettingsPage() {
       />
 
       {/* Profile */}
-      <Card>
+      <Card key={me.email}>
         <CardHeader>
           <CardTitle>{t("profileTitle")}</CardTitle>
           <p className="text-sm text-muted-foreground">{t("profileDesc")}</p>
         </CardHeader>
         <CardContent className="space-y-5">
           <div className="flex items-center gap-4">
-            <Avatar name={currentUser.name} color={currentUser.avatarColor} className="h-14 w-14 text-base" />
+            <Avatar name={me.name} color={me.avatarColor ?? "#6366f1"} className="h-14 w-14 text-base" />
             <Button variant="outline" size="sm">
               {t("changeAvatar")}
             </Button>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label={t("fieldName")}>
-              <Input defaultValue={currentUser.name} />
+              <Input defaultValue={me.name} />
             </Field>
             <Field label={t("fieldEmail")}>
-              <Input defaultValue={currentUser.email} type="email" />
+              <Input defaultValue={me.email} type="email" />
             </Field>
             <Field label={t("fieldTitle")}>
-              <Input defaultValue={tt(currentUser.titleKey)} />
+              <Input defaultValue={me.title ?? tt(currentUser.titleKey)} />
             </Field>
             <Field label={t("fieldRole")}>
-              <Input defaultValue={tt(`role${currentUser.role}`)} disabled />
+              <Input defaultValue={tt(`role${me.role}`)} disabled />
             </Field>
           </div>
           <div className="flex justify-end">

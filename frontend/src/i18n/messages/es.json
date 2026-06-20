@@ -107,11 +107,27 @@
     "kpiMrr": "Ingresos recurrentes mensuales",
     "kpiActiveUsers": "Usuarios activos",
     "kpiNewSignups": "Nuevos registros",
-    "kpiChurnRate": "Tasa de cancelación"
+    "kpiChurnRate": "Tasa de cancelación",
+    "kpiTotalMembers": "Miembros totales",
+    "kpiActiveMembers": "Miembros activos",
+    "kpiPendingInvites": "Invitaciones pendientes",
+    "kpiSeatsUsed": "Asientos usados",
+    "subNewThisMonth": "+{count} este mes",
+    "subOfTotalActive": "{count} de {total} activos",
+    "subAwaiting": "a la espera de respuesta",
+    "subOfSeats": "de {total} asientos",
+    "teamGrowthTitle": "Crecimiento del equipo",
+    "teamGrowthSubtitle": "Total de miembros en los últimos 12 meses",
+    "newMembersTitle": "Nuevos miembros",
+    "newMembersSubtitle": "Añadidos por mes",
+    "rolesTitle": "Miembros por rol",
+    "rolesTotal": "{count} en total"
   },
   "charts": {
     "mrr": "MRR",
-    "newCustomers": "Nuevos clientes"
+    "newCustomers": "Nuevos clientes",
+    "members": "Miembros",
+    "newMembers": "Nuevos miembros"
   },
   "users": {
     "title": "Usuarios",
@@ -128,7 +144,22 @@
     "filterAdmins": "Administradores",
     "filterManagers": "Gerentes",
     "filterMembers": "Miembros",
-    "pending": "Pendiente"
+    "pending": "Pendiente",
+    "inviteTitle": "Invitar a un usuario",
+    "inviteName": "Nombre completo",
+    "inviteEmail": "Correo electrónico",
+    "inviteRole": "Rol",
+    "inviteSend": "Enviar invitación",
+    "inviteSending": "Enviando…",
+    "cancel": "Cancelar",
+    "makeAdmin": "Hacer administrador",
+    "makeManager": "Hacer gerente",
+    "makeMember": "Hacer miembro",
+    "suspend": "Suspender",
+    "activate": "Activar",
+    "remove": "Eliminar",
+    "inviteError": "No se pudo invitar al usuario",
+    "removeConfirm": "¿Eliminar a {name} del espacio de trabajo?"
   },
   "team": {
     "roleADMIN": "Administrador",
@@ -214,7 +245,10 @@
     "descEnabled2fa": "habilitó la autenticación de dos factores",
     "descUpdatedBranding": "actualizó la marca del espacio de trabajo",
     "descDownloadedInvoice": "descargó la factura de {month}",
-    "descResetPassword": "restableció su contraseña"
+    "descResetPassword": "restableció su contraseña",
+    "descRemovedUser": "eliminó a {name}",
+    "descCreatedWorkspace": "creó el espacio de trabajo",
+    "descGeneric": "realizó un cambio"
   },
   "settings": {
     "title": "Configuración",

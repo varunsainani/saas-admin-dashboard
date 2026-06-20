@@ -6,14 +6,29 @@ import { PageHeader } from "@/components/page-header";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { plans, currentPlanId } from "@/lib/data";
+import { plans } from "@/lib/data";
+import { getSubscription, type ApiSubscription } from "@/lib/api";
+import { planNameToKey } from "@/lib/mappers";
+import { useLive } from "@/lib/use-live";
 import { cn } from "@/lib/utils";
 import { useAppFormat } from "@/i18n/use-app-format";
+
+const DEMO_SUB: ApiSubscription = {
+  id: "demo",
+  planId: "pro",
+  plan: { id: "pro", name: "Pro", priceMonthly: 7900, seats: 25, features: [], popular: true },
+  status: "ACTIVE",
+  seatsUsed: 12,
+  currentPeriodEnd: "2026-07-01",
+};
 
 export default function BillingPage() {
   const t = useTranslations("billing");
   const fmt = useAppFormat();
-  const current = plans.find((p) => p.id === currentPlanId)!;
+  const { data: sub } = useLive(getSubscription, DEMO_SUB);
+  const s = sub ?? DEMO_SUB;
+  const currentPlanKey = planNameToKey(s.plan.name) ?? "planPro";
+  const seatsPct = Math.round((s.seatsUsed / s.plan.seats) * 100);
 
   return (
     <div className="space-y-6 p-4 sm:p-6 lg:p-8">
@@ -25,23 +40,23 @@ export default function BillingPage() {
           <div className="min-w-0">
             <div className="flex items-center gap-2">
               <h2 className="text-lg font-semibold">
-                {t("currentPlanHeading", { plan: t(current.nameKey) })}
+                {t("currentPlanHeading", { plan: t(currentPlanKey) })}
               </h2>
               <Badge tone="primary">{t("currentBadge")}</Badge>
             </div>
             <p className="mt-1 text-sm text-muted-foreground">
               {t("priceRenews", {
-                price: fmt.currency(current.priceMonthly / 100),
-                date: fmt.date("2026-07-01"),
+                price: fmt.currency(s.plan.priceMonthly / 100),
+                date: fmt.date(s.currentPeriodEnd),
               })}
             </p>
             <div className="mt-4 max-w-xs">
               <div className="flex items-center justify-between text-xs text-muted-foreground">
                 <span>{t("seatsUsed")}</span>
-                <span>{t("seatsCount", { used: 12, total: 25 })}</span>
+                <span>{t("seatsCount", { used: s.seatsUsed, total: s.plan.seats })}</span>
               </div>
               <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-muted">
-                <div className="h-full rounded-full bg-primary" style={{ width: "48%" }} />
+                <div className="h-full rounded-full bg-primary" style={{ width: `${seatsPct}%` }} />
               </div>
             </div>
           </div>
@@ -55,7 +70,7 @@ export default function BillingPage() {
       {/* Plans grid */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
         {plans.map((plan) => {
-          const isCurrent = plan.id === currentPlanId;
+          const isCurrent = plan.nameKey === currentPlanKey;
           return (
             <Card
               key={plan.id}

@@ -107,11 +107,27 @@
     "kpiMrr": "Monthly recurring revenue",
     "kpiActiveUsers": "Active users",
     "kpiNewSignups": "New signups",
-    "kpiChurnRate": "Churn rate"
+    "kpiChurnRate": "Churn rate",
+    "kpiTotalMembers": "Total members",
+    "kpiActiveMembers": "Active members",
+    "kpiPendingInvites": "Pending invites",
+    "kpiSeatsUsed": "Seats used",
+    "subNewThisMonth": "+{count} this month",
+    "subOfTotalActive": "{count} of {total} active",
+    "subAwaiting": "awaiting response",
+    "subOfSeats": "of {total} seats",
+    "teamGrowthTitle": "Team growth",
+    "teamGrowthSubtitle": "Total members over the last 12 months",
+    "newMembersTitle": "New members",
+    "newMembersSubtitle": "Added per month",
+    "rolesTitle": "Members by role",
+    "rolesTotal": "{count} total"
   },
   "charts": {
     "mrr": "MRR",
-    "newCustomers": "New customers"
+    "newCustomers": "New customers",
+    "members": "Members",
+    "newMembers": "New members"
   },
   "users": {
     "title": "Users",
@@ -128,7 +144,22 @@
     "filterAdmins": "Admins",
     "filterManagers": "Managers",
     "filterMembers": "Members",
-    "pending": "Pending"
+    "pending": "Pending",
+    "inviteTitle": "Invite a user",
+    "inviteName": "Full name",
+    "inviteEmail": "Email",
+    "inviteRole": "Role",
+    "inviteSend": "Send invite",
+    "inviteSending": "Sending…",
+    "cancel": "Cancel",
+    "makeAdmin": "Make admin",
+    "makeManager": "Make manager",
+    "makeMember": "Make member",
+    "suspend": "Suspend",
+    "activate": "Activate",
+    "remove": "Remove",
+    "inviteError": "Could not invite user",
+    "removeConfirm": "Remove {name} from the workspace?"
   },
   "team": {
     "roleADMIN": "Admin",
@@ -214,7 +245,10 @@
     "descEnabled2fa": "enabled two-factor authentication",
     "descUpdatedBranding": "updated workspace branding",
     "descDownloadedInvoice": "downloaded the {month} invoice",
-    "descResetPassword": "reset their password"
+    "descResetPassword": "reset their password",
+    "descRemovedUser": "removed {name}",
+    "descCreatedWorkspace": "created the workspace",
+    "descGeneric": "made a change"
   },
   "settings": {
     "title": "Settings",

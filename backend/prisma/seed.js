@@ -27,6 +27,11 @@ const MEMBERS = [
 ];
 
 async function main() {
+  const now = new Date();
+  // Spread member join dates across the last ~12 months so the growth chart
+  // reflects real history. Index 0 (founder) is oldest, later members newer.
+  const joinedAt = (i) => new Date(now.getFullYear(), now.getMonth() - (MEMBERS.length - 1 - i), 6 + (i % 20));
+
   // Plans
   const planByName = {};
   for (const p of PLANS) {
@@ -62,7 +67,14 @@ async function main() {
     const m = MEMBERS[i];
     created[m.email] = await prisma.user.upsert({
       where: { email: m.email },
-      update: { name: m.name, role: m.role, status: m.status, title: m.title, organizationId: org.id },
+      update: {
+        name: m.name,
+        role: m.role,
+        status: m.status,
+        title: m.title,
+        organizationId: org.id,
+        createdAt: joinedAt(i),
+      },
       create: {
         organizationId: org.id,
         name: m.name,
@@ -74,6 +86,7 @@ async function main() {
         emailVerified: m.status !== "INVITED",
         avatarColor: AVATAR_COLORS[i % AVATAR_COLORS.length],
         lastActiveAt: new Date(Date.now() - i * 60 * 60 * 1000),
+        createdAt: joinedAt(i),
       },
     });
   }

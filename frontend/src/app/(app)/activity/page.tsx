@@ -9,7 +9,10 @@ import { Button } from "@/components/ui/button";
 import { Avatar } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { useAppFormat } from "@/i18n/use-app-format";
-import { auditLog, NOW, type AuditCategory } from "@/lib/data";
+import { getAudit } from "@/lib/api";
+import { normalizeAudit } from "@/lib/mappers";
+import { useLive } from "@/lib/use-live";
+import { auditLog, NOW, type AuditCategory, type AuditEvent } from "@/lib/data";
 
 const meta: Record<AuditCategory, { icon: LucideIcon; color: string }> = {
   user: { icon: Users, color: "#6366f1" },
@@ -36,7 +39,11 @@ export default function ActivityPage() {
   const fmt = useAppFormat();
 
   const [filter, setFilter] = useState<"ALL" | AuditCategory>("ALL");
-  const rows = auditLog.filter((e) => filter === "ALL" || e.category === filter);
+  const { data: all } = useLive<AuditEvent[]>(
+    async () => (await getAudit(50)).map(normalizeAudit),
+    auditLog,
+  );
+  const rows = all.filter((e) => filter === "ALL" || e.category === filter);
 
   return (
     <div className="space-y-6 p-4 sm:p-6 lg:p-8">
