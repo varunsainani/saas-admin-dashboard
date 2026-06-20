@@ -81,6 +81,13 @@
   * {
     border-color: var(--border);
   }
+  /* Tailwind v4 leaves buttons with the default arrow cursor; restore pointer. */
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  label[for],
+  summary {
+    cursor: pointer;
+  }
   html {
     -webkit-text-size-adjust: 100%;
   }
